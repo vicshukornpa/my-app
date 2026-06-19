@@ -55,13 +55,17 @@ async function loadProducts() {
 
         container.innerHTML = '';
         products.forEach(p => {
+            const productDetail = p.detail || '';
             const div = document.createElement('div');
-            div.className = "bg-gray-900 border border-gray-800 rounded-3xl p-6 hover:border-gray-600 transition-all";
+            div.className = "bg-gray-900 border border-gray-800 rounded-3xl p-6 hover:border-gray-600 transition-all flex flex-col justify-between";
             div.innerHTML = `
-                <div class="font-semibold text-lg mb-3">${p.name}</div>
-                <div class="text-3xl font-mono text-amber-400 mb-6">${Number(p.price).toLocaleString()} <span class="text-base text-gray-500">บาท</span></div>
+                <div>
+                    <div class="font-semibold text-lg mb-1 truncate">${p.name}</div>
+                    <div class="text-sm text-gray-400 mb-4 line-clamp-2 h-10 break-words">${productDetail}</div>
+                    <div class="text-3xl font-mono text-amber-400 mb-6">${Number(p.price).toLocaleString()} <span class="text-base text-gray-500">บาท</span></div>
+                </div>
                 <div class="flex gap-3">
-                    <button onclick="openEdit('${p.id}', '${p.name.replace(/'/g,"\\'")}', ${p.price})" class="flex-1 bg-gray-800 hover:bg-gray-700 py-3 rounded-2xl text-sm">✏️ แก้ไข</button>
+                    <button onclick="openEdit('${p.id}', '${p.name.replace(/'/g,"\\'")}', ${p.price}, '${productDetail.replace(/'/g,"\\'")}')" class="flex-1 bg-gray-800 hover:bg-gray-700 py-3 rounded-2xl text-sm">✏️ แก้ไข</button>
                     <button onclick="deleteProduct('${p.id}')" class="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 py-3 rounded-2xl text-sm">🗑️ ลบ</button>
                 </div>
             `;
@@ -75,12 +79,13 @@ async function loadProducts() {
 window.submitProduct = async () => {
     const name = document.getElementById('name').value.trim();
     const price = document.getElementById('price').value.trim();
-    if (!name || !price) return toast('กรุณากรอกข้อมูลให้ครบ', 'error');
+    const detail = document.getElementById('detail').value.trim();
+    if (!name || !price || !detail) return toast('กรุณากรอกข้อมูลให้ครบ', 'error');
 
     const data = {
-        detail:'รายละเอียดสินค้า',
         name, 
         price: Number(price), 
+        detail,
         createdAt: firebase.firestore.FieldValue.serverTimestamp() 
     };
 
@@ -106,10 +111,11 @@ window.submitProduct = async () => {
     }
 };
 
-window.openEdit = (id, name, price) => {
+window.openEdit = (id, name, price, detail) => {
     editingId = id;
     document.getElementById('name').value = name;
     document.getElementById('price').value = price;
+    document.getElementById('detail').value = detail;
     document.getElementById('form-title').textContent = 'แก้ไขสินค้า';
     document.getElementById('submit-btn').textContent = '💾 บันทึก';
     document.getElementById('cancel-btn').classList.remove('hidden');
@@ -121,6 +127,7 @@ function resetForm() {
     editingId = null;
     document.getElementById('name').value = '';
     document.getElementById('price').value = '';
+    document.getElementById('detail').value = '';
     document.getElementById('form-title').textContent = 'เพิ่มสินค้าใหม่';
     document.getElementById('submit-btn').textContent = '➕ เพิ่มสินค้า';
     document.getElementById('cancel-btn').classList.add('hidden');
